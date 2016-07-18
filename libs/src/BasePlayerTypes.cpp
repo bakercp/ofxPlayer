@@ -38,19 +38,19 @@ BaseTimeIndexed::~BaseTimeIndexed()
 
 double BaseTimeIndexed::startTime() const
 {
-    return timeForIndex(0);
+    return size() > 0 ? timeForIndex(0) : -1;
 }
 
 
 double BaseTimeIndexed::endTime() const
 {
-    return timeForIndex(size() - 1);
+    return size() > 0 ? timeForIndex(size() - 1) : -1;
 }
 
 
 double BaseTimeIndexed::duration() const
 {
-    return endTime() - startTime();
+    return size() > 0 ? (endTime() - startTime()) : 0;
 }
 
 
@@ -145,7 +145,6 @@ std::size_t BaseTimeIndexed::indexForTime(double time,
             }
         }
     }
-
 
     return index;
 
