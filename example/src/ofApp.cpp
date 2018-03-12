@@ -35,12 +35,12 @@ void ofApp::setup()
 //
 //    ofx::PlayableBufferHandle<std::vector<ofx::SensorEventArgs> > handle(events);
 
-    
+
 }
 
 
 void ofApp::draw()
 {
     ofBackgroundGradient(ofColor::white, ofColor::black);
-    
+
 }

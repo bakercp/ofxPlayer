@@ -36,12 +36,12 @@ void ofApp::setup()
 
 void ofApp::update()
 {
-    
+
 }
 
 
 void ofApp::draw()
 {
     ofBackgroundGradient(ofColor::white, ofColor::black);
-    
+
 }

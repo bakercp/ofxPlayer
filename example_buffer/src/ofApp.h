@@ -33,9 +33,9 @@
 class ofApp: public ofBaseApp
 {
 public:
-    void setup();
-    void update();
-    void draw();
+    void setup() override;
+    void update() override;
+    void draw() override;
 
     ofVideoGrabber grabber;
 
