@@ -12,7 +12,7 @@
 namespace ofx {
 namespace Player {
 
-    
+
 ImageSequence::ImageSequence():
     _pixelCache(std::make_unique<PixelCache>(DEFAULT_PIXEL_CACHE_SIZE)),
     _textureCache(std::make_unique<TextureCache>(DEFAULT_TEXTURE_CACHE_SIZE))

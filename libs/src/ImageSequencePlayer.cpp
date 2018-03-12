@@ -11,7 +11,7 @@
 namespace ofx {
 namespace Player {
 
-    
+
 const ofPixels ImageSequencePlayer::EMPTY_PIXELS;
 const ofTexture ImageSequencePlayer::EMPTY_TEXTURE;
 

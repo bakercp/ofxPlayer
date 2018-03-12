@@ -222,13 +222,13 @@ void BasePlayer::update()
     {
         elapsedTime *= -1.0;
     }
-        
+
     // Are we increasing?
     bool increasing = (elapsedTime > 0);
 
     // Set the uncorrected time.
     _time += elapsedTime;
-    
+
     double loopStartTime = getLoopStartTime();
     double loopEndTime = getLoopEndTime();
 
@@ -300,7 +300,7 @@ void BasePlayer::update()
             {
                 _time = (loopStartTime + overshoot);
             }
-            
+
             _playingForward = !_playingForward;
         }
     }

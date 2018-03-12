@@ -95,11 +95,11 @@ public:
     {
         return _pixels;
     }
-    
+
 private:
     /// \brieif A const pointer to the cached pixels.
     const ofPixels* _pixels;
-    
+
 };
 
 /// \brief An image sequence.
@@ -107,7 +107,7 @@ class ImageSequence: public BaseTimeIndexed
 {
 public:
     ImageSequence();
-    
+
     /// \brief Create an image sequence from a directory.
     ///
     /// If the name if the image sequence is empty, then the directory name will
@@ -125,7 +125,7 @@ public:
                   const std::string& filePattern,
                   bool makeFilesRelativeToDirectory = true,
                   const AbstractURITimestamper& stamper = FilenameTimestamper());
-    
+
     /// \brief Destroy the ImageSequence.
     virtual ~ImageSequence();
 

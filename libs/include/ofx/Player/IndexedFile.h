@@ -106,7 +106,7 @@ private:
 //private:
 //    /// \brief A collection of timestamped resources.
 //    std::vector<TimestampedResource> _resources;
-//    
+//
 //};
 
 
@@ -266,7 +266,7 @@ public:
                   {
                       return lhs.timestamp() < rhs.timestamp();
                   });
-        
+
         return true;
 
     }

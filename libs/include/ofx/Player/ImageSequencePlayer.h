@@ -31,7 +31,7 @@ public:
     virtual ~ImageSequencePlayer();
 
     bool load(std::shared_ptr<ImageSequence> data);
-    
+
     void close();
 
     bool isFrameNew() const;
@@ -46,7 +46,7 @@ public:
 
     static const ofPixels EMPTY_PIXELS;
     static const ofTexture EMPTY_TEXTURE;
-    
+
 //protected:
     const BaseTimeIndexed* indexedData() const override;
 

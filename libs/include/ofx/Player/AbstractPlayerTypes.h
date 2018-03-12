@@ -26,7 +26,7 @@ public:
 
     /// \brief Get the timestamp in microseconds of the data.
     virtual double timestamp() const = 0;
-    
+
 };
 
 
@@ -87,10 +87,10 @@ public:
     /// \brief Get data for the given time in microseconds.
     ///
     /// If playing forward (increasing == true), this will return the index of
-    /// the frame with a timestamp <= time.
+    /// the frame with a timestamp <= time.
     ///
     /// If playing backward (increasing == false), this will return the index of
-    /// the frame with a timestamp >= time.
+    /// the frame with a timestamp >= time.
     ///
     /// The indexHint is optional and can be used to find make sequential
     /// access quicker by providing the last known index that met the

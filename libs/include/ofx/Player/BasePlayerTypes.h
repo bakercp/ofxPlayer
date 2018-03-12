@@ -108,7 +108,7 @@ public:
     {
         return AdapterType::timestamp(_buffer[index]);
     }
-    
+
 
     virtual std::size_t size() const override
     {
@@ -245,7 +245,7 @@ protected:
 
     /// \brief True if data is loaded.
     bool _playing = false;
-    
+
 };
 
 
