@@ -9,6 +9,7 @@
 
 
 #include "ofxIO.h"
+#include "ofxCache.h"
 #include "ofx/Player/AbstractPlayerTypes.h"
 #include "ofx/Player/BasePlayerTypes.h"
 #include "ofx/Player/IndexedFile.h"

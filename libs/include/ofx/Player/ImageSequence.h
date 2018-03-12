@@ -8,10 +8,10 @@
 #pragma once
 
 
+#include "ofJson.h"
 #include "ofx/Player/BasePlayerTypes.h"
 #include "ofx/Player/IndexedFile.h"
-#include "lrucache.hpp"
-#include "json.hpp"
+#include "ofx/Cache/LRUMemoryCache.h"
 
 
 namespace ofx {
@@ -251,10 +251,10 @@ public:
 
 private:
     /// \brief A typedef for a pixel cache.
-    typedef cache::lru_cache<std::size_t, std::shared_ptr<ofPixels>> PixelCache;
+    typedef Cache::LRUMemoryCache<std::size_t, ofPixels> PixelCache;
 
     /// \brief A typedef for a texture cache.
-    typedef cache::lru_cache<std::size_t, std::shared_ptr<ofTexture>> TextureCache;
+    typedef Cache::LRUMemoryCache<std::size_t, ofTexture> TextureCache;
 
     /// \brief The sequnce name, if set.
     std::string _name;
@@ -272,10 +272,10 @@ private:
     float _height = 0;
 
     /// \brief A cache for pixels.
-    std::unique_ptr<PixelCache> _pixelCache;
+    mutable std::unique_ptr<PixelCache> _pixelCache;
 
     /// \brief A cache for textures.
-    std::unique_ptr<TextureCache> _textureCache;
+    mutable std::unique_ptr<TextureCache> _textureCache;
 
 };
 

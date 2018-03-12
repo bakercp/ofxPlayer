@@ -106,7 +106,7 @@ const ofPixels& ImageSequence::getPixels(std::size_t index) const
 
             if (ofLoadImage(*pixels, path))
             {
-                _pixelCache->put(index, pixels);
+                _pixelCache->add(index, pixels);
                 return *pixels;
             }
             else
@@ -138,7 +138,7 @@ const ofTexture& ImageSequence::getTexture(std::size_t index) const
 
             if (ofLoadImage(*pixels, path))
             {
-                _pixelCache->put(index, pixels);
+                _pixelCache->add(index, pixels);
             }
             else
             {
@@ -151,7 +151,7 @@ const ofTexture& ImageSequence::getTexture(std::size_t index) const
 
             if (texture->isAllocated())
             {
-                _textureCache->put(index, texture);
+                _textureCache->add(index, texture);
                 return *texture;
             }
             else
@@ -304,11 +304,9 @@ bool ImageSequence::toJson(const ImageSequence& sequence,
             { "ts", image.timestamp() }
         });
     }
-    
-    ofBuffer buffer(json.dump());
-    
+
     std::string _filename = filename;
-    
+
     if (_filename.empty())
     {
         _filename += sequence._baseDirectory;
@@ -316,8 +314,8 @@ bool ImageSequence::toJson(const ImageSequence& sequence,
         _filename += sequence.getName();
         _filename += ".json";
     }
-    
-    return ofBufferToFile(_filename, buffer);
+
+    return ofSaveJson(_filename, json);
 }
 
 
