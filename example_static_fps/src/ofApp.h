@@ -19,6 +19,6 @@ public:
     void update() override;
     void draw() override;
 
-    std::vector<std::shared_ptr<ofx::ImageSequencePlayer>> players;
+    std::vector<ofx::Player::ImageSequencePlayer> players;
 
 };

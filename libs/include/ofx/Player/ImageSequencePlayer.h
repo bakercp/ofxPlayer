@@ -25,14 +25,18 @@ public:
     // \brief Create an ImageSequencePlayer.
     ImageSequencePlayer();
 
+    ImageSequencePlayer(const std::string& path);
+
     ImageSequencePlayer(std::shared_ptr<ImageSequence> data);
 
     /// \brief Destroy the ImageSequencePlayer.
     virtual ~ImageSequencePlayer();
 
+    bool load(const std::string& path);
+
     bool load(std::shared_ptr<ImageSequence> data);
 
-    void close();
+    void close() override;
 
     bool isFrameNew() const;
 
@@ -47,10 +51,10 @@ public:
     static const ofPixels EMPTY_PIXELS;
     static const ofTexture EMPTY_TEXTURE;
 
-//protected:
     const BaseTimeIndexed* indexedData() const override;
 
-    std::shared_ptr<ImageSequence> _data;
+protected:
+    std::shared_ptr<ImageSequence> _data = nullptr;
 
 //    bool _isUsingTexture = true;
 //

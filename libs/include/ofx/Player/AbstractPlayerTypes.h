@@ -267,6 +267,8 @@ public:
     /// \returns true iff is playing.
     virtual bool isPlaying() const = 0;
 
+    /// \brief Close the Abstract Player.
+    virtual void close() = 0;
 };
 
 

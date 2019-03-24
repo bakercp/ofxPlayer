@@ -31,10 +31,10 @@ public:
 
     /// \brief Determine a resource's timestamp based on its URI.
     /// \param uri The URI of the resource to analyze.
-    /// \param timestamp The timestamp in microseconds.
+    /// \param timestampMicros The timestamp in microseconds.
     /// \returns true if the timestamp generation was successful.
-    virtual bool createTimestamp(const std::string& uri,
-                                 double& timestamp) const = 0;
+    virtual bool createTimestampMicros(const std::string& uri,
+                                       double& timestampMicros) const = 0;
 
 };
 
@@ -45,10 +45,10 @@ class TimestampedURI: public AbstractTimestamped
 public:
     /// \brief Create a timestamped resource.
     /// \param uri The URI to timestamp.
-    /// \param timestamp The timestamp in microseconds.
-    TimestampedURI(const std::string& uri, double timestamp):
+    /// \param timestampMicros The timestamp in microseconds.
+    TimestampedURI(const std::string& uri, double timestampMicros):
         _uri(uri),
-        _timestamp(timestamp)
+        _timestampMicros(timestampMicros)
     {
     }
 
@@ -59,7 +59,7 @@ public:
 
     virtual double timestamp() const override
     {
-        return _timestamp;
+        return _timestampMicros;
     }
 
     /// \returns the URI.
@@ -70,7 +70,7 @@ public:
 
 private:
     /// \brief The timestamp in microseconds.
-    double _timestamp = 0;
+    double _timestampMicros = 0;
 
     /// \brief The URI.
     std::string _uri;
@@ -126,8 +126,8 @@ public:
     {
     }
 
-    virtual bool createTimestamp(const std::string& uri,
-                                 double& timestamp) const override
+    virtual bool createTimestampMicros(const std::string& uri,
+                                       double& timestampMicros) const override
     {
         // Note, we might do this with std::get_time or similar, but this std-
         // based approach does not easily support fractional seconds, so for
@@ -141,7 +141,7 @@ public:
                                            dateTime,
                                            tzd))
         {
-            timestamp = dateTime.timestamp().epochMicroseconds();
+            timestampMicros = dateTime.timestamp().epochMicroseconds();
             return true;
         }
         else
@@ -172,12 +172,12 @@ class SequenceTimestamper: public AbstractURITimestamper
 {
 public:
     /// \brief Create a filename timestamper from a frame duration.
-    /// \param frameDuration The duration of each frame in microseconds.
-    /// \param offset The timestamp offset to start with in microseconds.
-    SequenceTimestamper(double frameDuration,
-                        double offset = 0):
-        _frameDuration(frameDuration),
-        _lastTimestamp(offset)
+    /// \param frameDurationMicros The duration of each frame in microseconds.
+    /// \param offsetMicros The timestamp offset to start with in microseconds.
+    SequenceTimestamper(double frameDurationMicros,
+                        double offsetMicros = 0):
+        _frameDurationMicros(frameDurationMicros),
+        _lastTimestampMicros(offsetMicros)
     {
     }
 
@@ -186,29 +186,29 @@ public:
     {
     }
 
-    virtual bool createTimestamp(const std::string& uri,
-                                 double& timestamp) const override
+    virtual bool createTimestampMicros(const std::string& uri,
+                                       double& timestampMicros) const override
     {
-        timestamp = _lastTimestamp + _frameDuration;
-        _lastTimestamp = timestamp;
+        timestampMicros = _lastTimestampMicros + _frameDurationMicros;
+        _lastTimestampMicros = timestampMicros;
         return true;
     }
 
     /// \brief Create a filename timestamper from a frame rate.
     /// \param frameRate Frames per second.
-    /// \param offset The timestamp filename format used to store timestamps.
+    /// \param offset The timestamp offset to start with in microseconds.
     /// \returns A SequenceTimestamper configured with the given parameters.
-    static SequenceTimestamper makeWithFrameRate(double frameRate, double offset = 0)
+    static SequenceTimestamper makeWithFrameRate(double frameRate, double offsetMicros = 0)
     {
-        return SequenceTimestamper(1000000.0 / frameRate, offset);
+        return SequenceTimestamper(1000000.0 / frameRate, offsetMicros);
     }
 
 private:
-    /// \brief The duration of each frame.
-    double _frameDuration = 0;
+    /// \brief The duration of each frame in microseconds.
+    double _frameDurationMicros = 0;
 
-    /// \brief The last timestamp assigned to a URI.
-    mutable double _lastTimestamp = 0;
+    /// \brief The last timestamp assigned to a URI in microseconds.
+    mutable double _lastTimestampMicros = 0;
 
 };
 
@@ -218,25 +218,25 @@ class TimestampedFilenameUtils
 {
 public:
     /// \brief Create a list of timestamped URIs.
+    /// \param resources The timestamped URIs to fill.
     /// \param directory The directory for the file resources.
     /// \param filePattern The regex file pattern to search for.
     /// \param makeRelativeToDirectory True if the image sequence should be
     ///        stored paths relative to the directory.
     /// \param stamper The timestamper responsible for converting a file to a
     ///        timestamp.
-    /// \param resources The timestamped URIs to fill.
     /// \returns true if listing is successful.
-    static bool list(const std::string& directory,
+    static bool list(std::vector<TimestampedURI>& resources,
+                     const std::string& directory,
                      const std::string& filePattern,
                      bool makeFilesRelativeToDirectory,
-                     const AbstractURITimestamper& stamper,
-                     std::vector<TimestampedURI>& resources)
+                     const AbstractURITimestamper& stamper)
     {
-        std::vector<std::string> files;
+        std::vector<std::filesystem::path> files;
 
         IO::RegexPathFilter regexFilter(filePattern);
 
-        IO::DirectoryUtils::list(directory,
+        IO::DirectoryUtils::list(std::filesystem::path(directory),
                                  files,
                                  true,
                                  &regexFilter,
@@ -244,16 +244,17 @@ public:
 
         resources.clear();
 
-        for (auto& file : files)
+        for (auto& file: files)
         {
-            double timestamp = 0;
+            double timestampMicros = 0;
 
-            if (stamper.createTimestamp(file, timestamp))
+            if (stamper.createTimestampMicros(file.string(), timestampMicros))
             {
-                resources.push_back(TimestampedURI(file, timestamp));
+                resources.push_back(TimestampedURI(file.string(), timestampMicros));
             }
             else
             {
+                ofLogError("TimestampedFilenameUtils::list") << "Unable to make TimestampedURI for: " << file;
                 return false;
             }
         }

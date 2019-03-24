@@ -14,23 +14,21 @@ void ofApp::setup()
     ofEnableAlphaBlending();
 
     std::vector<std::string> patterns = {
-//        ".*_full.jpg",
-        ".*_net.png",
-//        ".*_thumb.jpg"
+        ".*.jpg"
     };
 
-    for (auto& pattern : patterns)
+    for (auto& pattern: patterns)
     {
-        auto sequence = std::make_shared<ofx::ImageSequence>();
+        auto sequence = std::make_shared<ofxPlayer::ImageSequence>();
 
-        if (ofx::ImageSequence::fromDirectory("plc_seq", *sequence, pattern))
+        if (ofx::Player::ImageSequence::fromDirectory("/Users/bakercp/Desktop/of_v0.10.1_osx_release/apps/Drawings/ARPlayer/bin/data/videos/dress/45904_complete",
+                                                      *sequence,
+                                                      pattern))
         {
-            auto player = std::make_shared<ofx::ImageSequencePlayer>();
-
-            player->load(sequence);
-            player->play();
-            player->setLoopType(OF_LOOP_PALINDROME);
-
+            auto player = ofx::Player::ImageSequencePlayer();
+            player.load(sequence);
+            player.play();
+            //player.setLoopType(OF_LOOP_PALINDROME);
             players.push_back(player);
         }
     }
@@ -42,10 +40,10 @@ void ofApp::update()
 {
     for (auto& player: players)
     {
-        float speed = 100;//= ofMap(ofGetMouseX(), 0, ofGetWidth(), 0, 10);
+        float speed = ofMap(ofGetMouseX(), 0, ofGetWidth(), 0, 10);
 
-        player->setSpeed(speed);
-        player->update();
+        player.setSpeed(speed);
+        player.update();
     }
 }
 
@@ -59,16 +57,7 @@ void ofApp::draw()
 
     for (auto& player: players)
     {
-        ofPixels p = player->getPixels();
-
-//        ofPixels stable = stabilizer.stabilize(p);
-
-        ofTexture tex;
-        tex.loadData(p);
-        tex.draw(x, y);
-
-        //        player->getTexture().draw(x, y);
-
+        player.getTexture().draw(x, y);
         x += 100;
         y += 100;
     }

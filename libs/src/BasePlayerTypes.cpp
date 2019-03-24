@@ -7,6 +7,8 @@
 
 #include "ofx/Player/BasePlayerTypes.h"
 #include "ofx/Player/PlayerUtils.h"
+#include "ofLog.h"
+#include "ofMath.h"
 
 
 namespace ofx {
@@ -257,7 +259,7 @@ void BasePlayer::update()
 
             double cycle = toTime - fromTime;
 
-            if (ofxIsFloatEqual(cycle, 0.0))
+            if (ofIsFloatEqual(cycle, 0.0))
             {
                 return toTime;
             }
@@ -266,7 +268,7 @@ void BasePlayer::update()
         };
 
         // Add the elapsed time and wrap it.
-        _time = wrap(_time + elapsedTime, loopStartTime, loopEndTime);
+        _time = wrap(_time /* + elapsedTime */, loopStartTime, loopEndTime);
 
     }
     else if (_loopType == OF_LOOP_PALINDROME)
@@ -307,7 +309,7 @@ void BasePlayer::update()
     else
     {
         // Add the elapsed time and clamp it.
-        _time = std::max(loopStartTime, std::min(_time + elapsedTime, loopEndTime));
+        _time = std::max(loopStartTime, std::min(_time /* + elapsedTime */, loopEndTime));
     }
 
     _frameIndex = indexForTime(_time, increasing, _lastFrameIndex);
@@ -658,6 +660,13 @@ std::size_t BasePlayer::size() const
         return 0;
     }
 }
+
+
+
+//void BasePlayer::reset()
+//{
+//    _isFirstUpdate = true;
+//}
 
 
 } } // namespace ofx::Player

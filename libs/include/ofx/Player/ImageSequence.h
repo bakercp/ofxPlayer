@@ -108,6 +108,8 @@ class ImageSequence: public BaseTimeIndexed
 public:
     ImageSequence();
 
+    ImageSequence(const ImageSequence& sequence);
+
     /// \brief Create an image sequence from a directory.
     ///
     /// If the name if the image sequence is empty, then the directory name will
@@ -122,9 +124,9 @@ public:
     ///        stored paths relative to the directory.
     /// \param stamper The timestamper to use.
     ImageSequence(const std::string& directory,
-                  const std::string& filePattern,
+                  const std::string& filePattern = DEFAULT_FILE_PATTERN,
                   bool makeFilesRelativeToDirectory = true,
-                  const AbstractURITimestamper& stamper = FilenameTimestamper());
+                  const AbstractURITimestamper& stamper = SequenceTimestamper::makeWithFrameRate(30));
 
     /// \brief Destroy the ImageSequence.
     virtual ~ImageSequence();
@@ -190,31 +192,31 @@ public:
     /// If the name if the image sequence is empty, then the directory name will
     /// be used.
     ///
+    /// \param sequence The sequence to load.
     /// \param directory The directory for the file resources.
     /// \param filePattern The regex file pattern to load.
-    /// \param stamper The timestamper responsible for converting a file to a
-    ///        timestamp.
     /// \param resources The timestamped URIs to fill.
     /// \param makeFilesRelativeToDirectory True if the image sequence should be
-    ///        stored paths relative to the directory.
-    /// \param stamper The time stamper to use.
-    /// \returns true if listing is successful.
-    static bool fromDirectory(const std::string& directory,
-                              ImageSequence& sequence,
-                              const std::string& filePattern,
+    ///        stored as paths relative to the directory.
+    /// \param stamper The timestamper responsible for converting a file to a
+    ///        timestamp.
+    /// \returns true if loading is successful.
+    static bool fromDirectory(ImageSequence& sequence,
+                              const std::string& directory,
+                              const std::string& filePattern = DEFAULT_FILE_PATTERN,
                               bool makeFilesRelativeToDirectory = true,
                               const AbstractURITimestamper& stamper = SequenceTimestamper::makeWithFrameRate(30));
 
-    /// \brief Load an ImageSequence_ from a json file.
+    /// \brief Load an ImageSequence from a json file.
     /// \param filename The json file to load.
-    /// \param sequence The ImageSequence_ to load.
-    /// \returns true if the ImageSequence_ was loaded successfully.
+    /// \param sequence The ImageSequence to load.
+    /// \returns true if the ImageSequence was loaded successfully.
     static bool fromJson(const std::string& filename, ImageSequence& sequence);
 
-    /// \brief Save an ImageSequence_ to a json file.
-    /// \param sequence The ImageSequence_ to load.
+    /// \brief Save an ImageSequence to a json file.
+    /// \param sequence The ImageSequence to load.
     /// \param filename The json file to load.
-    /// \returns true if the ImageSequence_ was saved successfully.
+    /// \returns true if the ImageSequence was saved successfully.
     static bool toJson(const ImageSequence& sequence,
                        const std::string& filename = "");
 
@@ -249,6 +251,9 @@ public:
         DEFAULT_TEXTURE_CACHE_SIZE = 256
     };
 
+    /// \brief The default regex file pattern for loading directories.
+    static const std::string DEFAULT_FILE_PATTERN;
+
 private:
     /// \brief A typedef for a pixel cache.
     typedef Cache::LRUMemoryCache<std::size_t, ofPixels> PixelCache;
@@ -265,10 +270,10 @@ private:
     /// \brief A collection of timestamped images.
     std::vector<TimestampedURI> _images;
 
-    /// \brief The image width;
+    /// \brief The image width.
     float _width = 0;
 
-    /// \brief The image height;
+    /// \brief The image height.
     float _height = 0;
 
     /// \brief A cache for pixels.

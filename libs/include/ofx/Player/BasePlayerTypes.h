@@ -15,7 +15,7 @@ namespace ofx {
 namespace Player {
 
 
-/// \brief An base time indexed class.
+/// \brief A base time indexed class.
 class BaseTimeIndexed: public AbstractTimeIndexed
 {
 public:
@@ -43,7 +43,7 @@ public:
 };
 
 //
-///// \brief An base playable buffer.
+///// \brief A base playable buffer.
 //class BasePlayableBuffer: public BasePlayable
 //{
 //public:
@@ -190,6 +190,9 @@ protected:
     /// \returns a const pointer to the indexed data or nullptr if not loaded.
     virtual const BaseTimeIndexed* indexedData() const = 0;
 
+    /// \brief Reset internal variables.
+//    virtual void close() override;
+
     /// \brief True if the frame is new.
     bool _isFrameIndexNew = true;
 
@@ -243,7 +246,7 @@ protected:
     /// \brief True if the playback is paused.
     bool _paused = false;
 
-    /// \brief True if data is loaded.
+    /// \brief True if is playing.
     bool _playing = false;
 
 };

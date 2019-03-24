@@ -16,18 +16,40 @@ const ofPixels ImageSequencePlayer::EMPTY_PIXELS;
 const ofTexture ImageSequencePlayer::EMPTY_TEXTURE;
 
 
-ImageSequencePlayer::ImageSequencePlayer(): ImageSequencePlayer(nullptr)
+ImageSequencePlayer::ImageSequencePlayer()
 {
 }
 
 
-ImageSequencePlayer::ImageSequencePlayer(std::shared_ptr<ImageSequence> data): _data(data)
+ImageSequencePlayer::ImageSequencePlayer(const std::string& path)
 {
+    load(path);
+}
+
+
+ImageSequencePlayer::ImageSequencePlayer(std::shared_ptr<ImageSequence> data)
+{
+    load(data);
 }
 
 
 ImageSequencePlayer::~ImageSequencePlayer()
 {
+}
+
+
+bool ImageSequencePlayer::load(const std::string& path)
+{
+    auto data = std::make_shared<ImageSequence>();
+    if (ImageSequence::fromDirectory(*data, path))
+    {
+        _data = data;
+        return true;
+    }
+
+    return false;
+
+
 }
 
 

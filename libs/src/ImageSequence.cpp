@@ -6,6 +6,7 @@
 
 
 #include "ofx/Player/ImageSequence.h"
+#include "ofx/IO/ImageUtils.h"
 #include "ofImage.h"
 
 
@@ -13,9 +14,24 @@ namespace ofx {
 namespace Player {
 
 
+const std::string ImageSequence::DEFAULT_FILE_PATTERN = ".*.png|.*.jpg";
+
+
 ImageSequence::ImageSequence():
     _pixelCache(std::make_unique<PixelCache>(DEFAULT_PIXEL_CACHE_SIZE)),
     _textureCache(std::make_unique<TextureCache>(DEFAULT_TEXTURE_CACHE_SIZE))
+{
+}
+
+
+ImageSequence::ImageSequence(const ImageSequence& sequence):
+    _name(sequence._name),
+    _baseDirectory(sequence._baseDirectory),
+    _images(sequence._images),
+    _width(sequence._width),
+    _height(sequence._height),
+    _pixelCache(std::make_unique<PixelCache>(sequence._pixelCache->size())),
+    _textureCache(std::make_unique<TextureCache>(sequence._textureCache->size()))
 {
 }
 
@@ -38,8 +54,8 @@ ImageSequence::ImageSequence(const std::string& directory,
     _pixelCache(std::make_unique<PixelCache>(DEFAULT_PIXEL_CACHE_SIZE)),
     _textureCache(std::make_unique<TextureCache>(DEFAULT_TEXTURE_CACHE_SIZE))
 {
-    if (!fromDirectory(directory,
-                       *this,
+    if (!fromDirectory(*this,
+                       directory,
                        filePattern,
                        makeFilesRelativeToDirectory,
                        stamper))
@@ -54,9 +70,11 @@ ImageSequence::~ImageSequence()
 }
 
 
-double ImageSequence::timeForIndex(std::size_t index) const
+double ImageSequence::timeForIndex(std::size_t _index) const
 {
-    return _images[index].timestamp();
+    std::size_t index = _index % size();
+
+    return _images[_index % size()].timestamp();
 }
 
 
@@ -90,80 +108,61 @@ void ImageSequence::setHeight(float height)
 }
 
 
-const ofPixels& ImageSequence::getPixels(std::size_t index) const
+const ofPixels& ImageSequence::getPixels(std::size_t _index) const
 {
+    std::size_t index = _index % size();
+
     if (index < size())
     {
-        try
-        {
-            return *_pixelCache->get(index);
-        }
-        catch (const std::range_error&)
-        {
-            auto path = resolve(_images[index]);
+        auto pixels = _pixelCache->get(index);
 
-            auto pixels = std::make_shared<ofPixels>();
+        if (pixels)
+            return *pixels;
 
-            if (ofLoadImage(*pixels, path))
-            {
-                _pixelCache->add(index, pixels);
-                return *pixels;
-            }
-            else
-            {
-                throw std::runtime_error("Unable to load image " + path);
-            }
+        pixels = std::make_shared<ofPixels>();
+
+        auto path = resolve(_images[index]);
+
+        if (ofLoadImage(*pixels, path))
+        {
+            _pixelCache->add(index, pixels);
+            return *pixels;
         }
+
+        throw std::runtime_error("Unable to load image " + path);
     }
-    else
-    {
-        throw std::out_of_range("Index out of range: " + std::to_string(index));
-    }
+
+    throw std::out_of_range("Index out of range: " + std::to_string(index));
 }
 
 
-const ofTexture& ImageSequence::getTexture(std::size_t index) const
+const ofTexture& ImageSequence::getTexture(std::size_t _index) const
 {
+    std::size_t index = _index % size();
+
     if (index < size())
     {
-        try
+        auto texture = _textureCache->get(index);
+
+        if (texture)
+            return *texture;
+
+        auto pixels = getPixels(index);
+
+        texture = std::make_shared<ofTexture>();
+
+        texture->loadData(pixels);
+
+        if (texture->isAllocated())
         {
-            return *_textureCache->get(index);
+            _textureCache->add(index, texture);
+            return *texture;
         }
-        catch (const std::range_error&)
-        {
-            auto path = resolve(_images[index]);
 
-            auto pixels = std::make_shared<ofPixels>();
-
-            if (ofLoadImage(*pixels, path))
-            {
-                _pixelCache->add(index, pixels);
-            }
-            else
-            {
-                throw std::runtime_error("Unable to load image " + path);
-            }
-
-            auto texture = std::make_shared<ofTexture>();
-
-            texture->loadData(*pixels);
-
-            if (texture->isAllocated())
-            {
-                _textureCache->add(index, texture);
-                return *texture;
-            }
-            else
-            {
-                throw std::runtime_error("Unable to load texture " + path);
-            }
-        }
+        throw std::runtime_error("Unable to load texture " + resolve(_images[index]));
     }
-    else
-    {
-        throw std::out_of_range("Index out of range: " + std::to_string(index));
-    }
+
+    throw std::out_of_range("Index out of range: " + std::to_string(index));
 }
 
 
@@ -191,50 +190,41 @@ std::string ImageSequence::resolve(const TimestampedURI& uri) const
 }
 
 
-bool ImageSequence::fromDirectory(const std::string& directory,
-                                  ImageSequence& sequence,
+bool ImageSequence::fromDirectory(ImageSequence& sequence,
+                                  const std::string& directory,
                                   const std::string& filePattern,
                                   bool makeFilesRelativeToDirectory,
                                   const AbstractURITimestamper& stamper)
 {
-    if (makeFilesRelativeToDirectory)
-    {
-        sequence._baseDirectory = directory;
-    }
-    else
-    {
-        sequence._baseDirectory = "";
-    }
+    sequence._baseDirectory = makeFilesRelativeToDirectory ? directory : "";
 
     if (sequence._name.empty())
     {
-        sequence._name = ofFilePath::getBaseName(directory);
+        sequence._name = std::filesystem::basename(directory);
     }
 
-    if (TimestampedFilenameUtils::list(directory,
+    if (TimestampedFilenameUtils::list(sequence._images,
+                                       directory,
                                        filePattern,
                                        makeFilesRelativeToDirectory,
-                                       stamper,
-                                       sequence._images) && sequence.size() > 0)
+                                       stamper) && sequence.size() > 0)
     {
-        ofPixels pixels;
 
-        // TODO: read from header?
-        if (ofLoadImage(pixels, sequence.resolve(sequence.images()[0])))
+        // Load size info from header.
+        IO::ImageUtils::ImageHeader header;
+
+        if (IO::ImageUtils::loadHeader(header,
+                                       sequence.resolve(sequence.images()[0])))
         {
-            sequence._width = pixels.getWidth();
-            sequence._height = pixels.getHeight();
+            sequence._width = header.width;
+            sequence._height = header.height;
             return true;
         }
-        else
-        {
-            return false;
-        }
-    }
-    else
-    {
+
         return false;
     }
+
+    return false;
 }
 
 
@@ -269,7 +259,7 @@ bool ImageSequence::fromJson(const std::string& filename, ImageSequence& sequenc
 
         if (json["images"].is_array())
         {
-            for (auto& image : json["images"])
+            for (auto& image: json["images"])
             {
                 sequence._images.push_back(TimestampedURI(image["uri"], image["ts"]));
             }
@@ -333,7 +323,7 @@ void ImageSequence::setTextureCacheSize(std::size_t size)
 
 void ImageSequence::clearTextureCache()
 {
-    //_textureCache->clear();
+    _textureCache->clear();
 }
 
 
@@ -345,7 +335,7 @@ void ImageSequence::setPixelCacheSize(std::size_t size)
 
 void ImageSequence::clearPixelCache()
 {
-    //_pixelCache->clear();
+    _pixelCache->clear();
 }
 
 
