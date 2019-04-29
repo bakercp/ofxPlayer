@@ -9,6 +9,7 @@
 
 
 #include "ofx/Player/AbstractPlayerTypes.h"
+#include <chrono>
 
 
 namespace ofx {
