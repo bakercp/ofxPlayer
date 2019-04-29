@@ -487,7 +487,7 @@ void BasePlayer::setLoopType(ofLoopType loopType)
 
 void BasePlayer::setPaused(bool paused)
 {
-    return _paused;
+    _paused = paused;
 }
 
 
