@@ -1,7 +1,7 @@
 //
 // Copyright (c) 2013 Christopher Baker <https://christopherbaker.net>
 //
-// SPDX-License-Identifier:    MIT
+// SPDX-License-Identifier: MIT
 //
 
 
@@ -163,10 +163,8 @@ double BaseTimeIndexed::positionForTime(double time, bool clamp) const
     {
         return std::max(0.0, std::min((time - startTime()) / duration(), 1.0));
     }
-    else
-    {
-        return (time - startTime()) / duration();
-    }
+
+    return (time - startTime()) / duration();
 }
 
 
@@ -476,7 +474,6 @@ void BasePlayer::setLoopType(ofLoopType loopType)
             break;
         case OF_LOOP_NORMAL:
         case OF_LOOP_NONE:
-        default:
             break;
     }
 
@@ -527,11 +524,9 @@ double BasePlayer::startTime() const
     {
         return indexedData()->startTime();
     }
-    else
-    {
-        ofLogError("BasePlayer::startTime") << "The data is not loaded.";
-        return 0;
-    }
+
+    ofLogError("BasePlayer::startTime") << "The data is not loaded.";
+    return 0;
 }
 
 
@@ -541,11 +536,9 @@ double BasePlayer::endTime() const
     {
         return indexedData()->endTime();
     }
-    else
-    {
-        ofLogError("BasePlayer::endTime") << "The data is not loaded.";
-        return 0;
-    }
+
+    ofLogError("BasePlayer::endTime") << "The data is not loaded.";
+    return 0;
 }
 
 double BasePlayer::duration() const
@@ -554,11 +547,9 @@ double BasePlayer::duration() const
     {
         return indexedData()->duration();
     }
-    else
-    {
-        ofLogError("BasePlayer::duration") << "The data is not loaded.";
-        return 0;
-    }
+
+    ofLogError("BasePlayer::duration") << "The data is not loaded.";
+    return 0;
 }
 
 std::size_t BasePlayer::indexForPosition(double position,
@@ -569,11 +560,9 @@ std::size_t BasePlayer::indexForPosition(double position,
     {
         return indexedData()->indexForPosition(position, increasing, indexHint);
     }
-    else
-    {
-        ofLogError("BasePlayer::indexForPosition") << "The data is not loaded.";
-        return 0;
-    }
+
+    ofLogError("BasePlayer::indexForPosition") << "The data is not loaded.";
+    return 0;
 }
 
 
@@ -583,11 +572,10 @@ double BasePlayer::timeForPosition(double position) const
     {
         return indexedData()->timeForPosition(position);
     }
-    else
-    {
-        ofLogError("BasePlayer::timeForPosition") << "The data is not loaded.";
-        return 0;
-    }
+
+    ofLogError("BasePlayer::timeForPosition") << "The data is not loaded.";
+    return 0;
+
 }
 
 
@@ -597,11 +585,10 @@ double BasePlayer::positionForIndex(std::size_t index) const
     {
         return indexedData()->positionForIndex(index);
     }
-    else
-    {
-        ofLogError("BasePlayer::positionForIndex") << "The data is not loaded.";
-        return 0;
-    }
+
+    ofLogError("BasePlayer::positionForIndex") << "The data is not loaded.";
+    return 0;
+
 }
 
 
@@ -613,11 +600,10 @@ std::size_t BasePlayer::indexForTime(double time,
     {
         return indexedData()->indexForTime(time, increasing, indexHint);
     }
-    else
-    {
-        ofLogError("BasePlayer::indexForPosition") << "The data is not loaded.";
-        return 0;
-    }
+
+    ofLogError("BasePlayer::indexForPosition") << "The data is not loaded.";
+    return 0;
+
 }
 
 double BasePlayer::timeForIndex(std::size_t index) const
@@ -626,11 +612,10 @@ double BasePlayer::timeForIndex(std::size_t index) const
     {
         return indexedData()->timeForIndex(index);
     }
-    else
-    {
-        ofLogError("BasePlayer::timeAtIndex") << "The data is not loaded.";
-        return 0;
-    }
+
+    ofLogError("BasePlayer::timeAtIndex") << "The data is not loaded.";
+    return 0;
+
 }
 
 
@@ -640,11 +625,10 @@ double BasePlayer::positionForTime(double time, bool clamp) const
     {
         return indexedData()->positionForTime(time, clamp);
     }
-    else
-    {
-        ofLogError("BasePlayer::positionForTime") << "The data is not loaded.";
-        return 0;
-    }
+
+    ofLogError("BasePlayer::positionForTime") << "The data is not loaded.";
+    return 0;
+
 }
 
 
@@ -654,13 +638,11 @@ std::size_t BasePlayer::size() const
     {
         return indexedData()->size();
     }
-    else
-    {
-        ofLogError("BasePlayer::size") << "The data is not loaded.";
-        return 0;
-    }
-}
 
+    ofLogError("BasePlayer::size") << "The data is not loaded.";
+    return 0;
+
+}
 
 
 //void BasePlayer::reset()

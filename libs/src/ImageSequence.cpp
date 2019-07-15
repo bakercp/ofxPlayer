@@ -1,7 +1,7 @@
 //
 // Copyright (c) 2013 Christopher Baker <https://christopherbaker.net>
 //
-// SPDX-License-Identifier:    MIT
+// SPDX-License-Identifier: MIT
 //
 
 
@@ -72,8 +72,6 @@ ImageSequence::~ImageSequence()
 
 double ImageSequence::timeForIndex(std::size_t _index) const
 {
-    std::size_t index = _index % size();
-
     return _images[_index % size()].timestamp();
 }
 

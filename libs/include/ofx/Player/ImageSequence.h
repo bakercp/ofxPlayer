@@ -1,7 +1,7 @@
 //
 // Copyright (c) 2013 Christopher Baker <https://christopherbaker.net>
 //
-// SPDX-License-Identifier:    MIT
+// SPDX-License-Identifier: MIT
 //
 
 
@@ -75,7 +75,7 @@ public:
     }
 
 private:
-    /// \brieif A const pointer to the cached texture.
+    /// \brief A const pointer to the cached texture.
     const ofTexture* _texture;
 
 };
@@ -97,7 +97,7 @@ public:
     }
 
 private:
-    /// \brieif A const pointer to the cached pixels.
+    /// \brief A const pointer to the cached pixels.
     const ofPixels* _pixels;
 
 };
@@ -129,7 +129,7 @@ public:
                   const AbstractURITimestamper& stamper = SequenceTimestamper::makeWithFrameRate(30));
 
     /// \brief Destroy the ImageSequence.
-    virtual ~ImageSequence();
+    virtual ~ImageSequence() override;
 
     double timeForIndex(std::size_t index) const override;
 

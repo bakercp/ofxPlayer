@@ -1,7 +1,7 @@
 //
 // Copyright (c) 2013 Christopher Baker <https://christopherbaker.net>
 //
-// SPDX-License-Identifier:    MIT
+// SPDX-License-Identifier: MIT
 //
 
 
@@ -9,6 +9,7 @@
 
 
 #include "ofFileUtils.h"
+#include "ofLog.h"
 #include "Poco/DateTimeParser.h"
 #include "ofx/IO/DirectoryUtils.h"
 #include "ofx/IO/RegexPathFilter.h"
@@ -57,23 +58,23 @@ public:
     {
     }
 
-    virtual double timestamp() const override
-    {
-        return _timestampMicros;
-    }
-
     /// \returns the URI.
     std::string uri() const
     {
         return _uri;
     }
 
-private:
-    /// \brief The timestamp in microseconds.
-    double _timestampMicros = 0;
+    virtual double timestamp() const override
+    {
+        return _timestampMicros;
+    }
 
+private:
     /// \brief The URI.
     std::string _uri;
+
+    /// \brief The timestamp in microseconds.
+    double _timestampMicros = 0;
 
 };
 
@@ -122,7 +123,7 @@ public:
     }
 
     /// \brief Destroy the filename timestamper.
-    virtual ~FilenameTimestamper()
+    virtual ~FilenameTimestamper() override
     {
     }
 
@@ -182,11 +183,11 @@ public:
     }
 
     /// \brief Destroy the SequenceTimestamper_.
-    virtual ~SequenceTimestamper()
+    virtual ~SequenceTimestamper() override
     {
     }
 
-    virtual bool createTimestampMicros(const std::string& uri,
+    virtual bool createTimestampMicros(const std::string&,
                                        double& timestampMicros) const override
     {
         timestampMicros = _lastTimestampMicros + _frameDurationMicros;

@@ -1,7 +1,7 @@
 //
 // Copyright (c) 2013 Christopher Baker <https://christopherbaker.net>
 //
-// SPDX-License-Identifier:    MIT
+// SPDX-License-Identifier: MIT
 //
 
 
@@ -48,8 +48,6 @@ bool ImageSequencePlayer::load(const std::string& path)
     }
 
     return false;
-
-
 }
 
 
@@ -72,10 +70,8 @@ float ImageSequencePlayer::getWidth() const
     {
         return _data->getWidth();
     }
-    else
-    {
-        return 0;
-    }
+
+    return 0;
 }
 
 
@@ -85,10 +81,8 @@ float ImageSequencePlayer::getHeight() const
     {
         return _data->getHeight();
     }
-    else
-    {
-        return 0;
-    }
+
+    return 0;
 }
 
 
@@ -112,10 +106,8 @@ const ofPixels& ImageSequencePlayer::getPixels() const
             return EMPTY_PIXELS;
         }
     }
-    else
-    {
-        return EMPTY_PIXELS;
-    }
+
+    return EMPTY_PIXELS;
 }
 
 
@@ -133,10 +125,8 @@ const ofTexture& ImageSequencePlayer::getTexture() const
             return EMPTY_TEXTURE;
         }
     }
-    else
-    {
-        return EMPTY_TEXTURE;
-    }
+
+    return EMPTY_TEXTURE;
 }
 
 

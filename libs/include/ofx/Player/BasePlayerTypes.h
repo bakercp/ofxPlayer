@@ -1,7 +1,7 @@
 //
 // Copyright (c) 2013 Christopher Baker <https://christopherbaker.net>
 //
-// SPDX-License-Identifier:    MIT
+// SPDX-License-Identifier: MIT
 //
 
 
@@ -21,7 +21,7 @@ class BaseTimeIndexed: public AbstractTimeIndexed
 {
 public:
     /// \brief Destroy the BaseTimeIndexed.
-    virtual ~BaseTimeIndexed();
+    virtual ~BaseTimeIndexed() override;
 
     double startTime() const override;
     double endTime() const override;
@@ -43,7 +43,7 @@ public:
 
 };
 
-//
+
 ///// \brief A base playable buffer.
 //class BasePlayableBuffer: public BasePlayable
 //{
@@ -61,11 +61,6 @@ public:
 //
 //
 //};
-
-
-
-
-
 
 
 /// \brief A default buffer adapter.
@@ -130,7 +125,7 @@ class BasePlayer: public AbstractPlayer
 {
 public:
     /// \brief Destroy the AbstractPlayer.
-    virtual ~BasePlayer();
+    virtual ~BasePlayer() override;
     void update() override;
     bool isFrameIndexNew() const override;
     double getSpeed() const override;
@@ -192,7 +187,7 @@ protected:
     virtual const BaseTimeIndexed* indexedData() const = 0;
 
     /// \brief Reset internal variables.
-//    virtual void close() override;
+    // virtual void close() override;
 
     /// \brief True if the frame is new.
     bool _isFrameIndexNew = true;

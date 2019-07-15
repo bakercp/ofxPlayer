@@ -1,7 +1,7 @@
 //
 // Copyright (c) 2013 Christopher Baker <https://christopherbaker.net>
 //
-// SPDX-License-Identifier:    MIT
+// SPDX-License-Identifier: MIT
 //
 
 
@@ -30,7 +30,7 @@ public:
     ImageSequencePlayer(std::shared_ptr<ImageSequence> data);
 
     /// \brief Destroy the ImageSequencePlayer.
-    virtual ~ImageSequencePlayer();
+    virtual ~ImageSequencePlayer() override;
 
     bool load(const std::string& path);
 
@@ -62,24 +62,6 @@ protected:
 //    ofTexture* _texture = nullptr;
 
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 } } // namespace ofx::Player
