@@ -104,6 +104,26 @@ public:
                                      bool increasing,
                                      std::size_t indexHint) const = 0;
 
+    /// \brief Get data for the given time in microseconds.
+    ///
+    /// If playing forward (increasing == true), this will return the
+    /// interpolated index of the frame with a timestamp <= time.
+    ///
+    /// If playing backward (increasing == false), this will return the
+    /// interpolated index of the frame with a timestamp >= time.
+    ///
+    /// The indexHint is optional and can be used to find make sequential
+    /// access quicker by providing the last known index that met the
+    /// requirements above.
+    ///
+    /// \param time The time to query in microseconds.
+    /// \param increasing True if the time is increasing.
+    /// \param indexHint An hint that may make it easier to find the index.
+    /// \returns The interpolated corresponding to to the given time.
+    virtual double interpolatedIndexForTime(double time,
+                                            bool increasing,
+                                            std::size_t indexHint) const = 0;
+
     /// \brief Get the timestamp at the given index in microseconds.
     /// \param index The frame index to query.
     /// \returns the timestamp at the index in microseconds.
@@ -195,6 +215,20 @@ public:
     /// \param frame The current frame index.
     virtual void setFrameIndex(std::size_t index) = 0;
 
+    /// \brief Get the current interpolated frame index.
+    ///
+    /// A frame is the index of the closest data frame given the current
+    /// playback time.
+    ///
+    /// \returns the current interpolated frame index.
+    virtual double interpolatedFrameIndex() const = 0;
+
+    /// \returns the next frame expected, used for interpolation.
+    virtual std::size_t nextFrameIndex() const = 0;
+
+    /// \returns the frame index before the last update.
+    virtual std::size_t lastFrameIndex() const = 0;
+
     /// \brief Set the loop start point by position.
     /// \param position Set the normalized start position between 0 and 1.
     virtual void setLoopStartPosition(double position) = 0;
@@ -231,9 +265,11 @@ public:
     /// \param frame The loop point end frame index.
     virtual void setLoopEndFrameIndex(std::size_t index) = 0;
 
+    /// \TODO note about rounding.
     /// \returns the loop point start frame index.
     virtual std::size_t getLoopStartFrameIndex() const = 0;
 
+    /// \TODO note about rounding.
     /// \returns the loop point end frame index.
     virtual std::size_t getLoopEndFrameIndex() const = 0;
 
@@ -269,6 +305,7 @@ public:
 
     /// \brief Close the Abstract Player.
     virtual void close() = 0;
+
 };
 
 
