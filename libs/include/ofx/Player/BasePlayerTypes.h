@@ -39,6 +39,10 @@ public:
                              bool increasing,
                              std::size_t indexHint) const override;
 
+    double interpolatedIndexForTime(double time,
+                                    bool increasing,
+                                    std::size_t indexHint) const override;
+
     double positionForTime(double time, bool clamp) const override;
 
 };
@@ -119,6 +123,57 @@ private:
 };
 
 
+class BaseTimeIndexedInfo
+{
+public:
+    BaseTimeIndexedInfo();
+    BaseTimeIndexedInfo(const BaseTimeIndexed& stats);
+
+    bool load(const BaseTimeIndexed& stats);
+
+    /// \returns the minimum timestamp in microseconds.
+    double timestampMin() const;
+
+    /// \returns the minimum timestamp in microseconds.
+    double timestampMax() const;
+
+    /// \returns the duration of the data in microseconds.
+    double duration() const;
+
+    /// \returns the mean sampling frequency in Hz.
+    double samplingFreqencyMean() const;
+
+    /// \returns the minimum sampling frequency in Hz.
+    double samplingFrequencyMin() const;
+
+    /// \returns the maximum sampling frequency in Hz.
+    double samplingFrequencyMax() const;
+
+    /// \returns the standard deviation of the sampling frequency in Hz.
+    double samplingFrequencyStdDev() const;
+
+    /// \returns true if the timestamps of the data are increasing.
+    bool isMonotonic() const;
+
+    /// \returns true if the data has been calculated.
+    bool isLoaded() const;
+
+private:
+    bool _isLoaded = false;
+
+    double _timestampMin = 0;
+    double _timestampMax = 0;
+    double _duration = 0;
+
+    double _samplingFrequencyMean = 0;
+    double _samplingFrequencyMin = 0;
+    double _samplingFrequencyMax = 0;
+    double _samplingFrequencyStdDev = 0;
+    bool _isMonotonic = false;
+
+};
+
+
 
 /// \brief A base class for playing arbitrary timestamped data.
 class BasePlayer: public AbstractPlayer
@@ -136,6 +191,9 @@ public:
     void setTime(double time) override;
     std::size_t getFrameIndex() const override;
     void setFrameIndex(std::size_t index) override;
+    double interpolatedFrameIndex() const override;
+    std::size_t nextFrameIndex() const override;
+    std::size_t lastFrameIndex() const override;
     void setLoopStartPosition(double position) override;
     void setLoopEndPosition(double position) override;
     double getLoopStartPosition() const override;
@@ -161,6 +219,7 @@ public:
     double startTime() const override;
     double endTime() const override;
     double duration() const override;
+
     std::size_t indexForPosition(double position,
                                  bool increasing,
                                  std::size_t indexHint) const override;
@@ -169,9 +228,18 @@ public:
     std::size_t indexForTime(double time,
                              bool increasing,
                              std::size_t indexHint) const override;
+    double interpolatedIndexForTime(double time,
+                                    bool increasing,
+                                    std::size_t indexHint) const override;
     double timeForIndex(std::size_t index) const override;
     double positionForTime(double time, bool clamp) const override;
     std::size_t size() const override;
+
+    BaseTimeIndexedInfo stats() const;
+
+    void close() override;
+
+    void reset();
 
 protected:
     /// \brief A type definition for double microseconds.
@@ -186,11 +254,8 @@ protected:
     /// \returns a const pointer to the indexed data or nullptr if not loaded.
     virtual const BaseTimeIndexed* indexedData() const = 0;
 
-    /// \brief Reset internal variables.
-    // virtual void close() override;
-
     /// \brief True if the frame is new.
-    bool _isFrameIndexNew = true;
+    bool _isFrameIndexNew = false;
 
     /// \brief The playback speed.
     double _speed = 1;
@@ -209,10 +274,20 @@ protected:
     /// This is used to check if the frame is new.
     std::size_t _frameIndex = 0;
 
+    /// \brief The current interpolated frame index.
+    ///
+    /// This is used to check if the frame is new.
+    double _interpolatedFrameIndex = 0;
+
     /// \brief The last frame index.
     ///
     /// This is used to check if the frame is new.
-    std::size_t _lastFrameIndex = 0;
+    std::size_t _lastFrameIndex = -1;
+
+    /// \brief The projected next frame index.
+    ///
+    /// This is used to help interpolate between frames.
+    std::size_t _nextFrameIndex = -1;
 
     /// \brief The last update time in microseconds.
     std::chrono::high_resolution_clock::time_point _lastUpdateTime;
@@ -226,11 +301,14 @@ protected:
     /// \brief The playback loop type.
     ofLoopType _loopType = OF_LOOP_NONE;
 
+    /// \brief Is the loop set.
+    bool _loopSet = false;
+
     /// \brief The loop start time in microseconds.
-    double _loopStartTime = -1;
+    double _loopStartTime = 0.0;
 
     /// \brief The loop end time in microseconds.
-    double _loopEndTime = -1;
+    double _loopEndTime = 0.0;
 
     /// \brief True if there are frames betwen the loop points.
     ///
@@ -244,6 +322,9 @@ protected:
 
     /// \brief True if is playing.
     bool _playing = false;
+
+    /// \brief Get the stats.
+    mutable BaseTimeIndexedInfo _stats;
 
 };
 

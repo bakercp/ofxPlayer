@@ -93,14 +93,12 @@ std::size_t BaseTimeIndexed::indexForTime(double time,
 
             for (std::size_t i = indexMin; i < indexMax; ++i)
             {
-                if (timeForIndex(i) > time)
-                {
+                double timeAtI = timeForIndex(i);
+
+                if (timeAtI > time)
                     break;
-                }
                 else
-                {
                     index = i;
-                }
             }
         }
         else
@@ -157,6 +155,58 @@ std::size_t BaseTimeIndexed::indexForTime(double time,
 }
 
 
+double BaseTimeIndexed::interpolatedIndexForTime(double time,
+                                                 bool increasing,
+                                                 std::size_t indexHint) const
+{
+    std::size_t index = indexForTime(time, increasing, indexHint);
+    std::size_t nextIndex = index;
+
+    if (increasing)
+    {
+        if (nextIndex < size() - 1)
+            nextIndex++;
+    }
+    else
+    {
+        if (nextIndex > 0)
+            nextIndex--;
+    }
+
+    double indexTime = timeForIndex(index);
+    double nextIndexTime = timeForIndex(nextIndex);
+
+//    if (index == nextIndexTime)
+//        std::cout << "--------------------------------------" << std::endl;
+
+    return ofMap(time, indexTime, nextIndexTime, index, nextIndex);
+
+//    ofMap
+
+//    if (fabs(inputMin - inputMax) < FLT_EPSILON){
+//        return outputMin;
+//    } else {
+//        float outVal = ((value - inputMin) / (inputMax - inputMin) * (outputMax - outputMin) + outputMin);
+//
+//        if( clamp ){
+//            if(outputMax < outputMin){
+//                if( outVal < outputMax )outVal = outputMax;
+//                else if( outVal > outputMin )outVal = outputMin;
+//            }else{
+//                if( outVal > outputMax )outVal = outputMax;
+//                else if( outVal < outputMin )outVal = outputMin;
+//            }
+//        }
+//        return outVal;
+//    }
+//
+//
+//    double fractionalTime = (time - indexTime) / std::abs(indexTime - nextIndexTime);
+//
+//    return index + fractionalTime;
+}
+
+
 double BaseTimeIndexed::positionForTime(double time, bool clamp) const
 {
     if (clamp)
@@ -174,6 +224,145 @@ double DefaultBufferAdapter::timestamp(const AbstractTimestamped& input)
 }
 
 
+
+BaseTimeIndexedInfo::BaseTimeIndexedInfo()
+{
+}
+
+
+BaseTimeIndexedInfo::BaseTimeIndexedInfo(const BaseTimeIndexed& stats)
+{
+    load(stats);
+}
+
+
+bool BaseTimeIndexedInfo::load(const BaseTimeIndexed& stats)
+{
+    _isLoaded = false;
+    _timestampMin = std::numeric_limits<double>::max();
+    _timestampMax = std::numeric_limits<double>::lowest();
+    _duration = 0;
+    _samplingFrequencyMean = 0;
+    _samplingFrequencyMin = 0;
+    _samplingFrequencyMax = 0;
+    _samplingFrequencyStdDev = 0;
+    _isMonotonic = true;
+
+    double samplingIntervalSum = 0;
+    double samplingIntervalMin = std::numeric_limits<double>::max();
+    double samplingIntervalMax = std::numeric_limits<double>::lowest();
+    double samplingIntervalMean = 0;
+    double samplingIntervalStd = 0;
+
+    if (stats.size() > 0)
+    {
+        double lastTime = std::numeric_limits<double>::max();
+
+        std::vector<double> samplingIntervals(stats.size() - 1, 0);
+
+        for (std::size_t i = 0; i < stats.size(); ++i)
+        {
+            double time = stats.timeForIndex(i);
+
+            _timestampMin = std::min(_timestampMin, time);
+            _timestampMax = std::max(_timestampMax, time);
+
+            if (i != 0)
+            {
+                if (time < lastTime)
+                {
+                    _isMonotonic = false;
+                }
+
+                double samplingInterval = time - lastTime;
+
+//                std::cout << (time / 1000000.) << std::endl;
+
+                samplingIntervalMin = std::min(samplingIntervalMin, samplingInterval);
+                samplingIntervalMax = std::max(samplingIntervalMax, samplingInterval);
+
+                samplingIntervalSum += samplingInterval;
+                samplingIntervals[i - 1] = samplingInterval;
+            }
+
+            lastTime = time;
+        }
+
+        samplingIntervalMean =  samplingIntervalSum / samplingIntervals.size();
+
+        for (auto interval: samplingIntervals)
+        {
+            samplingIntervalStd += std::pow(interval - samplingIntervalMean, 2);
+        }
+
+        samplingIntervalStd = std::sqrt(samplingIntervalStd / samplingIntervals.size());
+
+
+        _duration = _timestampMax - _timestampMin;
+
+        _samplingFrequencyMean = 1000000 / samplingIntervalMean;
+        _samplingFrequencyMin = 1000000 / samplingIntervalMin;
+        _samplingFrequencyMax = 1000000 / samplingIntervalMax;
+        _samplingFrequencyStdDev = 1000000 / samplingIntervalStd;
+
+    }
+
+    _isLoaded = true;
+    return isLoaded();
+}
+
+
+double BaseTimeIndexedInfo::timestampMin() const
+{
+    return _timestampMin;
+}
+
+
+double BaseTimeIndexedInfo::timestampMax() const
+{
+    return _timestampMin;
+}
+
+
+double BaseTimeIndexedInfo::duration() const
+{
+    return _duration;
+}
+
+double BaseTimeIndexedInfo::samplingFreqencyMean() const
+{
+    return _samplingFrequencyMean;
+}
+
+
+double BaseTimeIndexedInfo::samplingFrequencyMin() const
+{
+    return _samplingFrequencyMin;
+}
+
+double BaseTimeIndexedInfo::samplingFrequencyMax() const
+{
+    return _samplingFrequencyMax;
+}
+
+double BaseTimeIndexedInfo::samplingFrequencyStdDev() const
+{
+    return _samplingFrequencyStdDev;
+}
+
+
+bool BaseTimeIndexedInfo::isMonotonic() const
+{
+    return _isMonotonic;
+}
+
+
+bool BaseTimeIndexedInfo::isLoaded() const
+{
+    return _isLoaded;
+}
+
+
 BasePlayer::~BasePlayer()
 {
 }
@@ -184,9 +373,11 @@ void BasePlayer::update()
     // If it's not loaded, no data, or not playing there is nothing to do.
     if (!isLoaded() || indexedData()->size() == 0 || !isPlaying())
     {
+        _isFrameIndexNew = false;
         return;
     }
 
+    // Determine the current update time.
     auto now = std::chrono::high_resolution_clock::now();
 
     // Begin calculating frame updates.
@@ -213,8 +404,6 @@ void BasePlayer::update()
     // Calculate the elapsed real-time.
     double elapsedRealTime = std::chrono::duration_cast<micros_duration>(now - _lastUpdateTime).count();
 
-    _lastUpdateTime = now;
-
     // Calculate the elapsed time. Can be negative.
     double elapsedTime = _speed * elapsedRealTime;
 
@@ -229,18 +418,22 @@ void BasePlayer::update()
     // Set the uncorrected time.
     _time += elapsedTime;
 
+    // We use a local copy here.
     double loopStartTime = getLoopStartTime();
     double loopEndTime = getLoopEndTime();
 
-    if (loopStartTime < 0)
+    if (!_loopSet)
     {
         loopStartTime = startTime();
-    }
-
-    if (loopEndTime < 0)
-    {
         loopEndTime = endTime();
     }
+    else if (loopEndTime < loopStartTime)
+    {
+        std::swap(loopStartTime, loopEndTime);
+    }
+
+//    std::cout << "LST: " << _loopStartTime << "->" << loopStartTime << std::endl;
+//    std::cout << "LET: " << _loopEndTime << "->" << loopEndTime << std::endl;
 
     double loopDuration = loopEndTime - loopStartTime;
 
@@ -310,9 +503,26 @@ void BasePlayer::update()
         _time = std::max(loopStartTime, std::min(_time /* + elapsedTime */, loopEndTime));
     }
 
+    _interpolatedFrameIndex = interpolatedIndexForTime(_time, increasing, _lastFrameIndex);
     _frameIndex = indexForTime(_time, increasing, _lastFrameIndex);
+
     _isFrameIndexNew = (_lastFrameIndex != _frameIndex);
     _lastFrameIndex = _frameIndex;
+
+    _nextFrameIndex = _frameIndex;
+    _lastUpdateTime = now;
+
+    // TODO - this will wrap if the loop mode
+    if (increasing)
+    {
+        if (_nextFrameIndex < size() - 1)
+            _nextFrameIndex++;
+    }
+    else
+    {
+        if (_nextFrameIndex > 0)
+            _nextFrameIndex--;
+    }
 }
 
 
@@ -370,6 +580,24 @@ void BasePlayer::setFrameIndex(std::size_t index)
 }
 
 
+double BasePlayer::interpolatedFrameIndex() const
+{
+    return _interpolatedFrameIndex;
+}
+
+
+std::size_t BasePlayer::nextFrameIndex() const
+{
+    return _nextFrameIndex;
+}
+
+
+std::size_t BasePlayer::lastFrameIndex() const
+{
+    return _lastFrameIndex;
+}
+
+
 void BasePlayer::setLoopStartPosition(double position)
 {
     setLoopStartTime(timeForPosition(position));
@@ -396,23 +624,15 @@ double BasePlayer::getLoopEndPosition() const
 
 void BasePlayer::setLoopStartTime(double time)
 {
-    _loopStartTime = std::max(startTime(), std::min(time, endTime()));
-
-    if (_loopStartTime > _loopEndTime)
-    {
-        std::swap(_loopStartTime, _loopEndTime);
-    }
+    _loopSet = true;
+    _loopStartTime = time;
 }
 
 
 void BasePlayer::setLoopEndTime(double time)
 {
-    _loopEndTime = std::max(startTime(), std::min(time, endTime()));
-
-    if (_loopStartTime > _loopEndTime)
-    {
-        std::swap(_loopStartTime, _loopEndTime);
-    }
+    _loopSet = true;
+    _loopEndTime = time;
 }
 
 
@@ -442,20 +662,21 @@ void BasePlayer::setLoopEndFrameIndex(std::size_t index)
 
 std::size_t BasePlayer::getLoopStartFrameIndex() const
 {
-    return indexForTime(getLoopStartTime(), 1, 0);
+    return indexForTime(getLoopStartTime(), true, 0);
 }
 
 
 std::size_t BasePlayer::getLoopEndFrameIndex() const
 {
-    return indexForTime(getLoopEndTime(), -1, size());
+    return indexForTime(getLoopEndTime(), false, size());
 }
 
 
 void BasePlayer::clearLoopPoints()
 {
-    _loopStartTime = -1;
-    _loopEndTime = -1;
+    _loopSet = false;
+    _loopStartTime = 0.0;
+    _loopEndTime = 0.0;
 }
 
 
@@ -478,7 +699,6 @@ void BasePlayer::setLoopType(ofLoopType loopType)
     }
 
     _loopType = loopType;
-
 }
 
 
@@ -552,6 +772,7 @@ double BasePlayer::duration() const
     return 0;
 }
 
+
 std::size_t BasePlayer::indexForPosition(double position,
                                          bool increasing,
                                          std::size_t indexHint) const
@@ -575,7 +796,6 @@ double BasePlayer::timeForPosition(double position) const
 
     ofLogError("BasePlayer::timeForPosition") << "The data is not loaded.";
     return 0;
-
 }
 
 
@@ -588,7 +808,6 @@ double BasePlayer::positionForIndex(std::size_t index) const
 
     ofLogError("BasePlayer::positionForIndex") << "The data is not loaded.";
     return 0;
-
 }
 
 
@@ -603,8 +822,22 @@ std::size_t BasePlayer::indexForTime(double time,
 
     ofLogError("BasePlayer::indexForPosition") << "The data is not loaded.";
     return 0;
-
 }
+
+
+double BasePlayer::interpolatedIndexForTime(double time,
+                                            bool increasing,
+                                            std::size_t indexHint) const
+{
+    if (isLoaded())
+    {
+        return indexedData()->interpolatedIndexForTime(time, increasing, indexHint);
+    }
+
+    ofLogError("BasePlayer::interpolatedIndexForTime") << "The data is not loaded.";
+    return 0;
+}
+
 
 double BasePlayer::timeForIndex(std::size_t index) const
 {
@@ -615,7 +848,6 @@ double BasePlayer::timeForIndex(std::size_t index) const
 
     ofLogError("BasePlayer::timeAtIndex") << "The data is not loaded.";
     return 0;
-
 }
 
 
@@ -628,7 +860,6 @@ double BasePlayer::positionForTime(double time, bool clamp) const
 
     ofLogError("BasePlayer::positionForTime") << "The data is not loaded.";
     return 0;
-
 }
 
 
@@ -641,14 +872,55 @@ std::size_t BasePlayer::size() const
 
     ofLogError("BasePlayer::size") << "The data is not loaded.";
     return 0;
-
 }
 
 
-//void BasePlayer::reset()
-//{
-//    _isFirstUpdate = true;
-//}
+BaseTimeIndexedInfo BasePlayer::stats() const
+{
+    if (isLoaded())
+    {
+        if (!_stats.isLoaded())
+        {
+            _stats.load(*indexedData());
+        }
+
+        return _stats;
+    }
+
+    ofLogError("BasePlayer::stats") << "The data is not loaded.";
+    return _stats;
+}
+
+
+void BasePlayer::close()
+{
+    reset();
+}
+
+
+void BasePlayer::reset()
+{
+    _isFrameIndexNew = false;
+    _speed = 1;
+    _playingForward = true;
+    _time = -1;
+    _lastTime = -1;
+    _frameIndex = 0;
+    _interpolatedFrameIndex = 0;
+    _lastFrameIndex = -1;
+    _nextFrameIndex = -1;
+    // _lastUpdateTime;
+    // _firstUpdateTime;
+    _isFirstUpdate = true;
+    _loopType = OF_LOOP_NONE;
+    _loopSet = false;
+    _loopStartTime = 0.0;
+    _loopEndTime = 0.0;
+    // bool _framesInLoop = true;
+    _paused = false;
+    _playing = false;
+    _stats = BaseTimeIndexedInfo();
+}
 
 
 } } // namespace ofx::Player
