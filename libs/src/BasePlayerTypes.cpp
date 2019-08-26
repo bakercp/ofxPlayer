@@ -432,9 +432,6 @@ void BasePlayer::update()
         std::swap(loopStartTime, loopEndTime);
     }
 
-//    std::cout << "LST: " << _loopStartTime << "->" << loopStartTime << std::endl;
-//    std::cout << "LET: " << _loopEndTime << "->" << loopEndTime << std::endl;
-
     double loopDuration = loopEndTime - loopStartTime;
 
     // TODO: determine if there are any frames available during our loop points ...
